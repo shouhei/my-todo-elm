@@ -1,4 +1,4 @@
-import Html exposing (Html, div, input, text, button)
+import Html exposing (Html, div, input, text, button, p)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
 import String
@@ -18,7 +18,7 @@ type alias Model = {inputting:String, tasks:List String}
 
 model : Model
 model =
-  Model "" [""]
+  Model "" []
 
 
 type Msg = Input String | Save
@@ -30,21 +30,24 @@ update msg model =
     Input new ->
       { model | inputting = new }
     Save ->
-      { model | tasks = (L.append model.tasks [model.inputting]) }
+      { model | inputting = "", tasks = (L.append model.tasks [model.inputting]) }
 
 view : Model -> Html Msg
 view model =
   div []
     [
-     input [ placeholder "This show text", onInput Input ] [text ""]
+     input [ placeholder "This show text", onInput Input , value model.inputting] []
     , div [] [text model.inputting]
     , button [ onClick Save ] [ text "save" ]
     , div [] (taskList model.tasks)
     ]
 
-taskList : List Maybe String -> List (Html Msg)
+taskList : List String -> List (Html Msg)
 taskList x =
-  if (L.withDefault [Just ""] (L.length x)) == 1 && ((L.head x) == (Just "")) then
-    []
+  if (L.length x) == 0 then
+      []
   else
-    (div [] [text (M.withDefault "" (L.head x))]) :: (taskList (M.withDefault [Just ""] (L.tail x)))
+    (div [] [
+         p [] [text (M.withDefault "" (L.head x))]
+         , input [type_ "checkbox" ] []
+         ]) :: (taskList (M.withDefault [] (L.tail x)))
