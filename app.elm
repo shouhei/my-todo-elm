@@ -1,7 +1,9 @@
-import Html exposing (Html, div, input, text)
+import Html exposing (Html, div, input, text, button)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onInput, onClick)
 import String
+import List as L
+import Maybe as M
 
 main =
     Html.beginnerProgram
@@ -12,26 +14,37 @@ main =
         }
 
 
-type alias Model = { token:String }
+type alias Model = {inputting:String, tasks:List String}
 
 model : Model
 model =
-  Model ""
+  Model "" [""]
 
 
-type Msg = Change String
+type Msg = Input String | Save
 
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
-    Change new ->
-      { model | token = new }
+    Input new ->
+      { model | inputting = new }
+    Save ->
+      { model | tasks = (L.append model.tasks [model.inputting]) }
 
 view : Model -> Html Msg
 view model =
   div []
     [
-     input [ placeholder "This show text", onInput Change ] []
-    , div [] [ text ("curl --header \"PRIVATE-TOKEN: " ++ model.token ++ "\" https://gitlab.com/api/v4/snippets") ]
+     input [ placeholder "This show text", onInput Input ] [text ""]
+    , div [] [text model.inputting]
+    , button [ onClick Save ] [ text "save" ]
+    , div [] (taskList model.tasks)
     ]
+
+taskList : List Maybe String -> List (Html Msg)
+taskList x =
+  if (L.withDefault [Just ""] (L.length x)) == 1 && ((L.head x) == (Just "")) then
+    []
+  else
+    (div [] [text (M.withDefault "" (L.head x))]) :: (taskList (M.withDefault [Just ""] (L.tail x)))
